@@ -11,6 +11,8 @@ tags:
     description: Registration, login and current user
   - name: linked-accounts
     description: Google accounts used as photo storage
+  - name: photos
+    description: Upload, list and download photos
 security:
   - bearerAuth: []
 paths:
@@ -103,7 +105,123 @@ paths:
                 $ref: '#/components/schemas/GoogleConnectResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /photos:
+    post:
+      tags: [photos]
+      operationId: uploadPhoto
+      summary: Upload a photo
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: JPEG, PNG or WebP image, up to 20MB
+      responses:
+        '201':
+          description: Photo stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '507':
+          $ref: '#/components/responses/InsufficientStorage'
+    get:
+      tags: [photos]
+      operationId: listPhotos
+      summary: List the current user's active photos, newest first
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque value from next_cursor of the previous page
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: One page of photos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /photos/{id}:
+    get:
+      tags: [photos]
+      operationId: getPhoto
+      summary: Get photo metadata
+      parameters:
+        - $ref: '#/components/parameters/PhotoId'
+      responses:
+        '200':
+          description: Photo metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /photos/{id}/download:
+    get:
+      tags: [photos]
+      operationId: downloadPhoto
+      summary: Download the photo file
+      parameters:
+        - $ref: '#/components/parameters/PhotoId'
+      responses:
+        '200':
+          description: Photo file
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
+  parameters:
+    PhotoId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
   securitySchemes:
     bearerAuth:
       type: http
@@ -130,6 +248,18 @@ components:
             $ref: '#/components/schemas/Error'
     Conflict:
       description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: Request is valid but cannot be processed, for example no linked account
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InsufficientStorage:
+      description: No linked account has enough free space
       content:
         application/json:
           schema:
@@ -238,3 +368,39 @@ components:
           type: string
           format: uri
           description: Google consent page to open in the browser
+    Photo:
+      type: object
+      required: [id, name, content_type, size, sha256, status, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        content_type:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+        size:
+          type: integer
+          format: int64
+          description: File size in bytes
+        sha256:
+          type: string
+        status:
+          type: string
+          enum: [pending, active, failed]
+        created_at:
+          type: string
+          format: date-time
+    PhotoList:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Photo'
+        next_cursor:
+          type: string
+          nullable: true
+          description: Pass as cursor to get the next page, null on the last page
