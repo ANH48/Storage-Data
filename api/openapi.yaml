@@ -4,11 +4,13 @@ info:
   version: 0.1.0
   description: JSON API for Photo Vault, a photo store pooling multiple Google Drive accounts.
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8080/api/v1
     description: Local development
 tags:
   - name: auth
     description: Registration, login and current user
+  - name: linked-accounts
+    description: Google accounts used as photo storage
 security:
   - bearerAuth: []
 paths:
@@ -72,6 +74,35 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /linked-accounts:
+    get:
+      tags: [linked-accounts]
+      operationId: listLinkedAccounts
+      summary: List the current user's linked accounts
+      responses:
+        '200':
+          description: Linked accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkedAccountList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /linked-accounts/google/connect:
+    post:
+      tags: [linked-accounts]
+      operationId: connectGoogleAccount
+      summary: Start linking a Google account
+      description: Returns the Google consent URL. The OAuth callback is a web route and is not part of this API.
+      responses:
+        '200':
+          description: Google consent URL created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleConnectResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 components:
   securitySchemes:
     bearerAuth:
@@ -87,6 +118,12 @@ components:
             $ref: '#/components/schemas/Error'
     Unauthorized:
       description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
       content:
         application/json:
           schema:
@@ -153,3 +190,51 @@ components:
           description: JWT sent as a bearer token
         user:
           $ref: '#/components/schemas/User'
+    LinkedAccount:
+      type: object
+      required: [id, provider, email, status, quota_limit, quota_used, quota_synced_at, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        provider:
+          type: string
+          example: google_drive
+        email:
+          type: string
+          format: email
+          description: Display only, the account is identified internally by its provider id
+        status:
+          type: string
+          enum: [active, near_full, revoked]
+        quota_limit:
+          type: integer
+          format: int64
+          description: Total storage in bytes
+        quota_used:
+          type: integer
+          format: int64
+          description: Used storage in bytes
+        quota_synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    LinkedAccountList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinkedAccount'
+    GoogleConnectResponse:
+      type: object
+      required: [auth_url]
+      properties:
+        auth_url:
+          type: string
+          format: uri
+          description: Google consent page to open in the browser
