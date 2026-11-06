@@ -19,6 +19,11 @@
 (Ưu tiên hơn references/decisions.md của skill)
 | Ngày | Thay quyết định | Quyết định mới | Lý do |
 |---|---|---|---|
+| 2026-11-06 | Roadmap 1.1: có endpoint delete linked account | MVP không có delete, chỉ cho lưu. Bỏ `DELETE /linked-accounts/{id}` | Giữ MVP đơn giản, tránh xử lý ảnh còn nằm trên acc bị gỡ |
+| 2026-11-06 | Roadmap 1.1: callback nằm trong spec | Callback Google là route web, không nằm trong `openapi.yaml` | Trình duyệt gọi, xác thực bằng `state`, trả về redirect |
+| 2026-11-06 | `flows.md`: chỉ có connect dạng redirect | API dùng `POST /api/v1/linked-accounts/google/connect` trả `auth_url`, web giữ redirect 302 | Bearer token không đi theo điều hướng của trình duyệt |
+| 2026-11-06 | Chưa có prefix cho API | JSON API dùng prefix `/api/v1` | Tránh trùng đường dẫn với route web trên cùng Echo server |
 
 ## Ghi chú review
+- Việc để sau: Phase 6 thêm `docs_handler` trong `internal/adapter/in/http/` để server tự phục vụ Swagger tại `/docs` (nhúng spec bằng `go:embed`). Tới lúc đó vẫn giữ `make swagger` cho tới khi handler chạy được.
 - Lỗi hay mắc, cần để ý:
