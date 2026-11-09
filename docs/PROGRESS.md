@@ -1,7 +1,7 @@
 # Photo Vault: Tiến độ học
 
 ## Đang làm
-- Bước: 2.2 Migration bằng golang-migrate
+- Bước: 2.3 sqlc
 - Bắt đầu: 2026-11-06
 
 ## Đã xong
@@ -13,11 +13,13 @@
 | 1.1 Viết `openapi.yaml` | 2026-11-06 | Spec có 9 endpoint, lint không có error. Spec do mentor viết theo yêu cầu. Nhựt trả lời được 422 khác 507. Cursor cần kèm `id` để thứ tự là duy nhất. |
 | 1.2 Swagger UI qua Docker | 2026-11-06 | Xem spec bằng `make swagger` ở cổng 8081. Hiểu `-p`, `-v`, `-e`, `--rm` và khác biệt giữa code-first với contract-first. |
 | 2.1 Postgres bằng Docker Compose | 2026-11-09 | Postgres 17 chạy ở `localhost:5444`, healthy, volume `storage-data_pgdata`. Bên trái của `ports` là cổng máy, bên phải là cổng container (luôn 5432). Healthcheck không phát hiện map cổng sai. |
+| 2.2 Migration bằng golang-migrate | 2026-11-09 | 4 migration chạy up, down -all, up đều sạch. FK vòng tròn users ↔ linked_accounts xử lý bằng ALTER TABLE ở migration 2. Migration do mentor viết theo yêu cầu. |
 
 ## Câu hỏi còn mở
 - 0.2: Vì sao module path nên đặt theo tên GitHub repo? (Nhựt chọn bỏ qua)
 - 0.1: Chạy Postgres bằng Docker so với cài thẳng vào máy có lợi và bất lợi gì? (chưa trả lời)
 - 2.1: Bind mount và named volume khác nhau thế nào? (chưa trả lời)
+- 2.2: `status` dùng CHECK hay ENUM? `ON DELETE` CASCADE hay RESTRICT? (mentor đã chọn CHECK và RESTRICT, Nhựt chưa tự trả lời)
 
 ## Quyết định thay đổi
 (Ưu tiên hơn references/decisions.md của skill)
@@ -31,5 +33,5 @@
 
 ## Ghi chú review
 - Việc để sau: Phase 6 thêm `docs_handler` trong `internal/adapter/in/http/` để server tự phục vụ Swagger tại `/docs` (nhúng spec bằng `go:embed`). Tới lúc đó vẫn giữ `make swagger` cho tới khi handler chạy được.
-- Việc để sau: bước 2.2 index gallery của `photos` nên thêm `id` ở cuối để khớp cursor `(created_at, id)`.
+- Việc để sau: `photos.updated_at` không có trigger, query UPDATE ở sqlc phải tự đặt `updated_at = now()`.
 - Lỗi hay mắc, cần để ý:
