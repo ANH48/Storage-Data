@@ -1,7 +1,7 @@
 # Photo Vault: Tiến độ học
 
 ## Đang làm
-- Bước: 2.1 Postgres bằng Docker Compose
+- Bước: 2.2 Migration bằng golang-migrate
 - Bắt đầu: 2026-11-06
 
 ## Đã xong
@@ -12,10 +12,12 @@
 | 0.3 Cấu trúc thư mục | 2026-11-06 | Import chỉ hướng vào trong (adapter → app → domain). Interface đặt ở phía dùng. Compiler không chặn `domain` import `pgx`, nên phải tự giữ quy ước. Câu `pgx` do mentor giải thích. |
 | 1.1 Viết `openapi.yaml` | 2026-11-06 | Spec có 9 endpoint, lint không có error. Spec do mentor viết theo yêu cầu. Nhựt trả lời được 422 khác 507. Cursor cần kèm `id` để thứ tự là duy nhất. |
 | 1.2 Swagger UI qua Docker | 2026-11-06 | Xem spec bằng `make swagger` ở cổng 8081. Hiểu `-p`, `-v`, `-e`, `--rm` và khác biệt giữa code-first với contract-first. |
+| 2.1 Postgres bằng Docker Compose | 2026-11-09 | Postgres 17 chạy ở `localhost:5444`, healthy, volume `storage-data_pgdata`. Bên trái của `ports` là cổng máy, bên phải là cổng container (luôn 5432). Healthcheck không phát hiện map cổng sai. |
 
 ## Câu hỏi còn mở
 - 0.2: Vì sao module path nên đặt theo tên GitHub repo? (Nhựt chọn bỏ qua)
-- 0.1: Chạy Postgres bằng Docker so với cài thẳng vào máy có lợi và bất lợi gì? (chưa trả lời, xem lại ở bước 2.1)
+- 0.1: Chạy Postgres bằng Docker so với cài thẳng vào máy có lợi và bất lợi gì? (chưa trả lời)
+- 2.1: Bind mount và named volume khác nhau thế nào? (chưa trả lời)
 
 ## Quyết định thay đổi
 (Ưu tiên hơn references/decisions.md của skill)
