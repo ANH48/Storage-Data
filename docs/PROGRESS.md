@@ -30,8 +30,15 @@
 | 2026-11-06 | `flows.md`: chỉ có connect dạng redirect | API dùng `POST /api/v1/linked-accounts/google/connect` trả `auth_url`, web giữ redirect 302 | Bearer token không đi theo điều hướng của trình duyệt |
 | 2026-11-06 | Chưa có prefix cho API | JSON API dùng prefix `/api/v1` | Tránh trùng đường dẫn với route web trên cùng Echo server |
 | 2026-11-06 | Bảng lỗi chỉ có 507 khi hết chỗ | User chưa liên kết acc nào mà upload thì trả 422, mọi acc đều đầy thì trả 507 | Nhựt chốt: chưa liên kết là việc user phải làm, khác với hết dung lượng |
+| 2026-11-10 | `data-model.md`: chỉ có 4 bảng, ảnh không có nhóm | Thêm `albums` và bảng nối `album_photos` (nhiều-nhiều), migration `000005`. Album chỉ là metadata, không tạo folder trên Drive | Nhựt chốt option B để dễ mở rộng. API thêm tạo, liệt kê album và thêm ảnh vào album |
+| 2026-11-10 | D3: app chỉ thấy file tự tạo, không có import | Import ảnh có sẵn bằng **Google Picker**, vẫn giữ scope `drive.file`. Làm sau Phase 8. Import chỉ tạo dòng `photos` trỏ tới file có sẵn, không copy | Nhựt chốt option A: giữ quyền tối thiểu |
+| 2026-11-10 | Chưa phân biệt nguồn ảnh | `photos.source` = `upload` hoặc `import`. Ảnh `import` không bao giờ bị xoá file gốc trên Drive, chỉ gỡ khỏi app | File gốc là của user. MVP chưa có xoá |
+| 2026-11-10 | Import trùng file | Báo trùng cho user. Nếu user vẫn muốn thì cho import, thêm hậu tố vào `name` (ví dụ `anh (2).jpg`). `object_key` giữ nguyên vì là Drive file id. Không đặt UNIQUE trên `(linked_account_id, object_key)` | Nhựt chốt cho phép trùng có cảnh báo |
+| 2026-11-10 | File bị xoá hoặc chuyển ngoài app | Khi mở ảnh mà Drive trả 404: đổi `status = failed`, báo user, lần sau gallery không hiện nữa. Lỗi khác (mạng, token) không được đổi status | Nhựt chốt, không cần thêm trạng thái mới |
+| 2026-11-10 | Giới hạn import và phân trang | Mỗi lần import tối đa 100 ảnh, chưa chạy nền, có ghi chú cho user. File không phải jpeg, png, webp bị từ chối. Gallery mặc định 10 ảnh mỗi trang | Nhựt chốt cho MVP |
 
 ## Ghi chú review
 - Việc để sau: Phase 6 thêm `docs_handler` trong `internal/adapter/in/http/` để server tự phục vụ Swagger tại `/docs` (nhúng spec bằng `go:embed`). Tới lúc đó vẫn giữ `make swagger` cho tới khi handler chạy được.
 - Việc để sau: `photos.updated_at` không có trigger, query UPDATE ở sqlc phải tự đặt `updated_at = now()`.
+- Việc để sau (sau Phase 8): làm import bằng Google Picker theo các quyết định ngày 2026-11-10. Cần thử xem chọn folder trong Picker có cho app thấy file bên trong không. Thêm index `(linked_account_id, object_key)` để dò trùng, và endpoint import vào `openapi.yaml`.
 - Lỗi hay mắc, cần để ý:
