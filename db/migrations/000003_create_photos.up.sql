@@ -9,6 +9,10 @@ CREATE TABLE photos (
                                   CHECK (content_type IN ('image/jpeg', 'image/png', 'image/webp')),
     size              bigint      NOT NULL CHECK (size > 0),
     sha256            text        NOT NULL,
+    -- upload: file created by the app. import: existing Drive file owned by
+    -- the user, which the app must never delete.
+    source            text        NOT NULL DEFAULT 'upload'
+                                  CHECK (source IN ('upload', 'import')),
     status            text        NOT NULL DEFAULT 'pending'
                                   CHECK (status IN ('pending', 'active', 'failed')),
     created_at        timestamptz NOT NULL DEFAULT now(),
